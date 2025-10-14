@@ -7,6 +7,7 @@ from typing import List, Dict
 class StockDataManager:
     """Manages stock data - fetches symbol list once and stores in memory"""
     
+    CACHE_FILE = "stock_symbols_cache.json"
     API_KEY = "{Api-key}"
     EXCHANGE_CODE = "US"  # can use any Exchange Code but US is for all the tickers in US
     
@@ -27,6 +28,31 @@ class StockDataManager:
             self._save_to_cache()
         
         print(f"Ready! Loaded {len(self.symbols)} symbols in memory")
+    
+    def _load_from_cache(self):
+        """Load symbols from cache file"""
+        try:
+            with open(self.CACHE_FILE, 'r') as f:
+                data = json.load(f)
+                self.stocks = data.get('stocks', {})
+                self.symbols = data.get('symbols', [])
+                print(f"Loaded {len(self.symbols)} symbols from cache")
+        except Exception as e:
+            print(f"Error loading cache: {e}")
+    
+    def _save_to_cache(self):
+        """Save symbols to cache file"""
+        try:
+            data = {
+                'stocks': self.stocks,
+                'symbols': self.symbols,
+                'cached_at': datetime.now().isoformat()
+            }
+            with open(self.CACHE_FILE, 'w') as f:
+                json.dump(data, f, indent=2)
+            print(f"Cached {len(self.symbols)} symbols to {self.CACHE_FILE}")
+        except Exception as e:
+            print(f"Error saving cache: {e}")
     
     def _fetch_from_api(self):
         """Fetch symbols from API (ONE TIME ONLY)"""
@@ -73,6 +99,7 @@ class StockDataManager:
         """Force refresh symbols from API"""
         print("Refreshing symbols from API...")
         self.load_symbols(force_refresh=True)
+
 
 # Example usage
 if __name__ == "__main__":
